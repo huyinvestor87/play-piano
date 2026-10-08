@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#101819">
+  <meta name="description" content="Tải nhạc, tập piano theo hướng dẫn và quay đôi tay của bạn trên iPad.">
+  <title>Play Piano — Góc đàn của bạn</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css?v=1.0.0">
+</head>
+<body>
+<main>
+  <header><a class="brand" href="./"><span class="brand-icon">♬</span> play<span>piano</span></a><span class="header-note">GÓC ĐÀN CỦA BẠN</span><button id="helpButton" class="quiet">Cách quay ↗</button></header>
+  <section class="intro"><div><p class="eyebrow">TỪ BẢN NHẠC ĐẾN ĐÔI TAY</p><h1>Chạm vào giai điệu.</h1><p>Tải một bản nhạc. Nhìn theo nốt. Quay khoảnh khắc bạn chơi.</p></div><button id="demoButton" class="quiet demo">Thử một giai điệu <span>↗</span></button></section>
+  <section class="studio">
+    <div class="track-bar"><label class="upload" for="audioFile"><span>＋</span><span>Tải bản nhạc<small>MP3 / WAV · tối đa 5 phút, 30 MB</small></span></label><input id="audioFile" type="file" accept="audio/*,.mp3,.wav" hidden><div class="track-info"><strong id="trackName">Bắt đầu bằng bản nhạc của bạn</strong><span id="status" role="status" aria-live="polite">Hoặc thử giai điệu mẫu để khám phá bàn phím.</span></div><span class="chip" id="noteCount">CHƯA CÓ NỐT</span></div>
+    <progress id="analysisProgress" max="1" value="0" hidden aria-label="Tiến độ nhận diện"></progress>
+    <div class="transport"><button id="playButton" class="primary" disabled>▶ Bắt đầu</button><button id="stopButton" class="quiet" disabled>↺ Về đầu</button><span class="time" id="timeLabel">0:00 / 0:00</span><input id="seek" type="range" min="0" max="1" value="0" step="0.01" aria-label="Vị trí bản nhạc" disabled><label>Tốc độ <select id="speed"><option value="0.5">0.5×</option><option value="0.75">0.75×</option><option value="1" selected>1× · quay</option></select></label><button id="filmButton" class="quiet">◉ Bố cục quay</button></div>
+    <div class="settings"><label><input type="checkbox" id="backing" checked> Nghe nhạc gốc</label><label><input type="checkbox" id="pianoSound" checked> Tiếng phím piano</label><label><input type="checkbox" id="countIn" checked> Đếm ngược 3 giây</label><label>Quãng phím <select id="range"><option value="48">C3 – C5</option><option value="60" selected>C4 – C6</option></select></label><button id="editButton" class="text-button">Chỉnh nốt / nhập hướng dẫn</button></div>
+    <div class="guide-heading"><span><i></i> HƯỚNG DẪN · NẰM NGOÀI KHUNG HÌNH QUAY</span><span id="nextNote">Chưa có giai điệu</span></div>
+    <div class="guide-wrap"><canvas id="guide" aria-label="Nốt sắp tới rơi xuống theo vị trí phím"></canvas><div id="countdown" hidden></div><div id="guideEmpty">Một bản nhạc.<br><span>Một khoảnh khắc của riêng bạn.</span></div></div>
+    <div class="camera-boundary"><span>✂ CĂN KHUNG CAMERA TỪ ĐÂY TRỞ XUỐNG</span></div>
+    <section class="performance" aria-label="Vùng bàn phím để quay"><div class="performance-title"><span>playpiano</span><span id="playedNote">CHẠM ĐỂ CHƠI</span><span>YOUR HANDS. YOUR MELODY.</span></div><div id="keyboard" class="keyboard" aria-label="Bàn phím piano cảm ứng"></div></section>
+  </section>
+  <footer><span>Hướng dẫn là giai điệu ước lượng · phù hợp nhất với nhạc đơn âm.</span><span>File được xử lý trên thiết bị của bạn.</span></footer>
+  <details class="notes"><summary>Nhận diện nốt và ghép video: những điều cần biết</summary><p>Bản thử dùng nhận diện cao độ để tìm một giai điệu, không tách đầy đủ hợp âm hay từng nhạc cụ. Piano có nhiều nốt cùng lúc, trống, giọng hát và nhạc hòa tấu có thể làm sai hoặc mất nốt. Hãy nghe, sửa hướng dẫn, hoặc nhập JSON nốt đã chuẩn bị.</p><p>Để quay: đặt iPad nằm ngang, dùng điện thoại quay tay và vùng dưới đường cắt. Tắt tiếng phím, nghe nhạc gốc qua tai nghe nếu phù hợp. Bắt đầu quay trước khi bấm Bắt đầu. Sau 3 tiếng đếm, nhạc và hướng dẫn khởi chạy cùng nhau; ghép đúng file gốc tại mốc nhạc bắt đầu. Quay ở tốc độ 1×. Tốc độ chậm dùng để tập và sẽ làm thay đổi cao độ nhạc.</p><p>Tiếng phím trong bản đầu là piano tổng hợp, chưa phải bộ sample piano thu thật. Safari cần một lần chạm để bật âm thanh. Không có video hay file nhạc nào được tự động tải lên máy chủ.</p></details>
+</main>
+<dialog id="helpDialog"><button class="close" data-close="helpDialog" aria-label="Đóng">×</button><p class="eyebrow">QUAY TAY THẬT, GIỮ HƯỚNG DẪN RIÊNG</p><h2>Một góc quay, hai vùng màn hình.</h2><ol><li>Đặt iPad nằm ngang. Tải MP3/WAV và kiểm tra các nốt gợi ý.</li><li>Chọn <b>Bố cục quay</b>. Hướng dẫn vẫn ở phía trên; bàn phím chính không hiện nốt sắp bấm.</li><li>Căn camera điện thoại chỉ lấy bàn phím bên dưới đường cắt và đôi tay.</li><li>Bật đếm ngược, chọn tốc độ <b>1×</b>, quay trước rồi bấm Bắt đầu.</li><li>Ghép nhạc gốc trong trình dựng video, căn đầu nhạc với mốc sau tiếng đếm cuối. Tắt âm thanh camera nếu không cần.</li></ol><p>App giúp bạn nhìn và bấm theo giai điệu; chưa chấm điểm đúng/sai và chưa ghép video tự động.</p></dialog>
+<dialog id="editorDialog"><button class="close" data-close="editorDialog" aria-label="Đóng">×</button><p class="eyebrow">LÀM CHO GIAI ĐIỆU ĐÚNG HƠN</p><h2>Hướng dẫn của bạn</h2><p>Thời điểm tính bằng giây trong file gốc. Có thể nhập nhiều nốt cùng thời điểm cho hợp âm.</p><div class="editor-actions"><button id="addNote" class="quiet">＋ Thêm nốt tại vị trí hiện tại</button><button id="exportNotes" class="quiet">Xuất JSON</button><label class="quiet import-label" for="notesFile">Nhập JSON</label><input id="notesFile" type="file" accept=".json,application/json" hidden></div><div class="table-scroll"><table><thead><tr><th>Giây</th><th>Nốt</th><th>Độ dài (s)</th><th></th></tr></thead><tbody id="noteRows"></tbody></table></div><p id="editorStatus" role="status"></p><p class="small">JSON: {"notes":[{"time":0,"midi":60,"duration":0.5}]} · MIDI 48–84. Nhập JSON sau khi tải file nhạc.</p><button id="saveNotes" class="primary">Lưu hướng dẫn</button></dialog>
+<script type="module" src="app.js?v=1.0.0"></script>
+</body></html>
