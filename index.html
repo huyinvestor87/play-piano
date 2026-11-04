@@ -11,7 +11,7 @@
 <body>
 <main>
   <header><a class="brand" href="./"><span class="brand-icon">♬</span> play<span>piano</span></a><span class="header-note">GÓC ĐÀN CỦA BẠN</span><button id="helpButton" class="quiet">Cách quay ↗</button></header>
-  <section class="intro"><div><p class="eyebrow">TỪ BẢN NHẠC ĐẾN ĐÔI TAY</p><h1>Chạm vào giai điệu.</h1><p>Tải một bản nhạc. Nhìn theo nốt. Quay khoảnh khắc bạn chơi.</p></div><button id="demoButton" class="quiet demo">Thử một giai điệu <span>↗</span></button></section>
+  <section class="intro"><div><p class="eyebrow">TỪ BẢN NHẠC ĐẾN ĐÔI TAY</p><h1>Chạm vào giai điệu.</h1><p>Tải một bản nhạc. Nhìn theo nốt. Quay khoảnh khắc bạn chơi.</p></div><div class="intro-actions"><a class="lesson-link" href="fur-elise.html">♪ Học đánh Für Elise <span>→</span></a><button id="demoButton" class="quiet demo">Thử một giai điệu <span>↗</span></button></div></section>
   <section class="studio">
     <div class="track-bar"><label class="upload" for="audioFile"><span>＋</span><span>Tải bản nhạc<small>MP3 / WAV · tối đa 5 phút, 30 MB</small></span></label><input id="audioFile" type="file" accept="audio/*,.mp3,.wav" hidden><div class="track-info"><strong id="trackName">Bắt đầu bằng bản nhạc của bạn</strong><span id="status" role="status" aria-live="polite">Hoặc thử giai điệu mẫu để khám phá bàn phím.</span></div><span class="chip" id="noteCount">CHƯA CÓ NỐT</span></div>
     <progress id="analysisProgress" max="1" value="0" hidden aria-label="Tiến độ nhận diện"></progress>

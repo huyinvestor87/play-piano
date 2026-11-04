@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "test": "node --test tests/*.test.js",
-    "check": "node --check app.js && node --check music.js && node --check analyzer-worker.js",
+    "check": "node --check app.js && node --check music.js && node --check analyzer-worker.js && node --check fur-elise.js && node --check fur-elise-score.js",
     "start": "python3 -m http.server 8000"
   }
 }
