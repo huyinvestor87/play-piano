@@ -1,4 +1,4 @@
-import { buildScore, buildSteps, LESSONS, noteLabel, keyPlace, isBlack, midiName, MIDDLE_C, TICKS } from './fur-elise-score.js?v=1.0.0';
+import { buildScore, buildSteps, LESSONS, SECTIONS, noteLabel, keyPlace, isBlack, midiName, MIDDLE_C, TICKS, fitRange, whiteKeys, keyboardWindows } from './fur-elise-score.js?v=1.1.0';
 
 const $ = id => document.getElementById(id);
 const score = buildScore();
@@ -16,7 +16,10 @@ const state = {
   lesson: LESSONS[0], view: { steps: [] }, notes: [], start: 0, end: 0,
   index: 0, pos: 0, target: 0, keys: new Map(), lo: 41, hi: 83,
   play: null, dirty: true, lastFrame: 0, marked: [], stepVoices: new Map(), done: false, zoom: 1,
+  // Vùng phím đang hiện (vA..vB, tính theo tỉ lệ dải phím của đoạn) và vùng đích khi trượt.
+  vA: 0, vB: 1, tA: 0, tB: 1, windows: null, keysEl: null,
 };
+const SECTION_TITLE = Object.fromEntries(SECTIONS.map(section => [section.id, section.title]));
 const secondsPerTick = () => 60 / BPM / 4 / TICKS / (settings.speed / 100);
 
 // ───────────────────────── Âm thanh (piano tổng hợp, không cần tải file) ─────────────────────────
@@ -142,15 +145,12 @@ function layoutKeys(lo, hi) {
   }
   return { keys, whites };
 }
-const whiteCount = (lo, hi) => { let n = 0; for (let m = lo; m <= hi; m++) if (!isBlack(m)) n++; return n; };
+const whiteCount = whiteKeys;
 function computeRange() {
   const midis = state.notes.map(n => n.midi);
-  let lo = Math.min(...midis) - 1, hi = Math.max(...midis) + 1;
-  const toLow = () => { while (![0, 5].includes(lo % 12)) lo--; };
-  const toHigh = () => { while (![4, 11].includes(hi % 12)) hi++; };
-  toLow(); toHigh();
-  for (let grow = 0; whiteCount(lo, hi) < 22; grow++) { if (grow % 2) { hi++; toHigh(); } else { lo--; toLow(); } }
-  state.lo = lo; state.hi = hi;
+  [state.lo, state.hi] = fitRange(Math.min(...midis), Math.max(...midis), 22);
+  // Đoạn trải rộng hơn 30 phím trắng (như cả bài): bàn phím trượt theo tay để phím không bị quá nhỏ.
+  state.windows = whiteKeys(state.lo, state.hi) > 30 ? keyboardWindows(state.notes, state.lesson.from, state.lesson.to, [state.lo, state.hi]) : null;
 }
 function keyLabel(midi) {
   const isC = midi % 12 === 0;
@@ -163,8 +163,9 @@ function keyLabel(midi) {
 function buildKeyboard() {
   const { keys } = layoutKeys(state.lo, state.hi);
   const [pianoLo, pianoHi] = PIANOS[settings.piano];
-  const board = $('keyboard');
-  board.replaceChildren();
+  const inner = document.createElement('div');
+  inner.className = 'keys';
+  $('keyboard').replaceChildren(inner);
   for (const key of keys.values()) {
     const el = document.createElement('div');
     el.className = `key ${key.black ? 'black' : 'white'}${key.midi % 12 === 0 ? ' c' : ''}${key.midi === MIDDLE_C ? ' middle-c' : ''}${key.midi < pianoLo || key.midi > pianoHi ? ' out' : ''}`;
@@ -172,15 +173,34 @@ function buildKeyboard() {
     el.style.left = `${key.x * 100}%`; el.style.width = `${key.w * 100}%`;
     const badge = document.createElement('span'); badge.className = 'badge'; el.append(badge);
     if (!key.black) { const label = document.createElement('span'); label.className = 'label'; label.innerHTML = keyLabel(key.midi); el.append(label); }
-    board.append(el);
+    inner.append(el);
     key.el = el; key.badge = badge;
   }
-  state.keys = keys; state.marked = [];
-  fitLabels();
+  state.keys = keys; state.marked = []; state.keysEl = inner;
+  applyView();
 }
 function fitLabels() {
-  const width = $('keyboard').clientWidth / Math.max(1, whiteCount(state.lo, state.hi));
+  const width = $('keyboard').clientWidth / Math.max(1, whiteCount(state.lo, state.hi) * (state.vB - state.vA));
   $('keyboard').classList.toggle('narrow', width < 34);
+}
+// Vùng phím đang hiện: cả dải của đoạn, hoặc một phần dải khi bàn phím trượt theo tay.
+function windowFor(bar) {
+  const [lo, hi] = state.windows?.get(bar) ?? [state.lo, state.hi];
+  const first = state.keys.get(lo), last = state.keys.get(hi);
+  return first && last ? [first.x, last.x + last.w] : [0, 1];
+}
+function setView(bar, instant) {
+  [state.tA, state.tB] = windowFor(bar);
+  if (instant) { state.vA = state.tA; state.vB = state.tB; }
+  applyView();
+}
+function applyView() {
+  if (!state.keysEl) return;
+  const span = state.vB - state.vA;
+  state.keysEl.style.width = `${100 / span}%`;
+  state.keysEl.style.left = `${-state.vA / span * 100}%`;
+  fitLabels();
+  state.dirty = true;
 }
 function markKeys(striking, held, upcoming) {
   for (const el of state.marked) el.classList.remove('on-R', 'on-L', 'hold-R', 'hold-L', 'next-R', 'next-L');
@@ -219,10 +239,12 @@ function drawMinimap() {
   const [lo, hi] = PIANOS[settings.piano];
   const { keys } = layoutKeys(lo, hi);
   const keyH = h - 2;
-  for (const key of keys.values()) if (!key.black) { mini.fillStyle = key.midi >= state.lo && key.midi <= state.hi ? '#e9e8df' : '#7d827c'; mini.fillRect(key.x * w + .5, 1, key.w * w - 1, keyH); }
+  const visible = [...state.keys.values()].filter(k => !k.black && k.x + k.w > state.vA + 1e-6 && k.x < state.vB - 1e-6);
+  const visLo = visible[0]?.midi ?? state.lo, visHi = visible[visible.length - 1]?.midi ?? state.hi;
+  for (const key of keys.values()) if (!key.black) { mini.fillStyle = key.midi >= visLo && key.midi <= visHi ? '#e9e8df' : '#7d827c'; mini.fillRect(key.x * w + .5, 1, key.w * w - 1, keyH); }
   for (const key of keys.values()) if (key.black) { mini.fillStyle = '#111'; mini.fillRect(key.x * w, 1, key.w * w, keyH * .6); }
   // Vùng đang hiển thị
-  const first = keys.get(Math.max(lo, state.lo)), last = keys.get(Math.min(hi, state.hi));
+  const first = keys.get(Math.max(lo, visLo)), last = keys.get(Math.min(hi, visHi));
   if (first && last) { mini.strokeStyle = '#b9edcf'; mini.lineWidth = 2; mini.strokeRect(first.x * w, 1, (last.x + last.w - first.x) * w, keyH); }
   // Đô giữa
   const middle = keys.get(MIDDLE_C);
@@ -259,12 +281,15 @@ function drawRoll() {
   const px16 = Math.min(Math.max(24, Math.min(64, H / 8)) * state.zoom, Math.max(30, H / 4));
   const pxTick = px16 / TICKS, hitY = H - 3, pos = state.pos;
   const yOf = t => hitY - (t - pos) * pxTick;
+  const span = state.vB - state.vA, X = fx => (fx - state.vA) / span * W;
+  const shown = key => key.x + key.w > state.vA && key.x < state.vB;
   // Cột phím
   for (const key of state.keys.values()) {
-    if (key.black) { pen.fillStyle = '#ffffff06'; pen.fillRect(key.x * W, 0, key.w * W, H); continue; }
+    if (!shown(key)) continue;
+    if (key.black) { pen.fillStyle = '#ffffff06'; pen.fillRect(X(key.x), 0, key.w / span * W, H); continue; }
     const c = key.midi % 12 === 0;
     pen.fillStyle = key.midi === MIDDLE_C ? '#c2484f55' : c ? '#ffffff22' : '#ffffff0c';
-    pen.fillRect(Math.round(key.x * W), 0, 1, H);
+    pen.fillRect(Math.round(X(key.x)), 0, 1, H);
   }
   // Vạch ô nhịp
   const lesson = state.lesson;
@@ -284,11 +309,11 @@ function drawRoll() {
     if (note.start > horizon) break;
     if (note.start + note.duration <= pos - .5) continue;
     const key = state.keys.get(note.midi);
-    if (!key) continue;
+    if (!key || !shown(key)) continue;
     const active = settings.hands.includes(note.hand);
     const now = active && step && note.start === step.time;
     const inset = key.black ? 1 : 2.5;
-    const x = key.x * W + inset, w = key.w * W - inset * 2;
+    const x = X(key.x) + inset, w = key.w / span * W - inset * 2;
     const y0 = yOf(note.start + note.duration), y1 = Math.min(yOf(note.start), hitY);
     const h = Math.max(note.grace ? 7 : 9, y1 - y0);
     const [fill, dark, ink] = COLORS[note.hand];
@@ -332,9 +357,10 @@ function context(time = state.view.steps[state.index]?.time ?? 0) {
   const held = state.notes.filter(n => settings.hands.includes(n.hand) && n.start < time && n.start + n.duration > time && !striking.includes(n));
   return { step, striking, held, upcoming: steps[state.index + 1]?.notes ?? [] };
 }
-function renderStep() {
+function renderStep(instant = false) {
   const { step, striking, held, upcoming } = context();
   if (!step) return;
+  setView(step.bar, instant);
   const [pianoLo, pianoHi] = PIANOS[settings.piano];
   const spoken = [];
   for (const hand of ['R', 'L']) {
@@ -364,7 +390,9 @@ function renderStep() {
     pedal.textContent = first ? 'PEDAL ↓ đạp' : last ? 'PEDAL ↑ nhả sau nốt này' : 'PEDAL giữ';
   }
   const lesson = state.lesson;
-  $('progressText').textContent = `Ô ${step.bar - lesson.from + 1}/${lesson.to - lesson.from + 1} · Bước ${state.index + 1}/${steps.length}`;
+  const section = score.bars[step.bar].section;
+  $('progressText').textContent = `${SECTION_TITLE[section]} · Ô ${step.bar - lesson.from + 1}/${lesson.to - lesson.from + 1} · Bước ${state.index + 1}/${steps.length}`;
+  for (const marker of $('sections').children) marker.classList.toggle('current', marker.dataset.section === section);
   $('seek').value = state.index;
   markKeys(striking, held, upcoming);
   drawMinimap();
@@ -375,10 +403,13 @@ function renderStep() {
 // ───────────────────────── Chọn đoạn / tay ─────────────────────────
 function renderLessons() {
   const nav = $('lessons');
-  nav.replaceChildren(...LESSONS.map((lesson, i) => {
+  // "Cả bài" đứng đầu cho dễ thấy; các đoạn tập đánh số 1, 2, 3…
+  let number = 0;
+  nav.replaceChildren(...[...LESSONS.filter(l => l.full), ...LESSONS.filter(l => !l.full)].map(lesson => {
     const button = document.createElement('button');
-    button.className = 'chip' + (lesson.id === state.lesson.id ? ' active' : '');
-    button.innerHTML = `<span class="n">${lesson.star ? '★' : i + 1}</span>${lesson.title}${settings.done[lesson.id] ? ' <span class="ok">✓</span>' : ''}`;
+    button.className = 'chip' + (lesson.full ? ' full' : '') + (lesson.id === state.lesson.id ? ' active' : '');
+    const mark = lesson.full ? '♫' : (++number, lesson.star ? '★' : number);
+    button.innerHTML = `<span class="n">${mark}</span>${lesson.title}${settings.done[lesson.id] ? ' <span class="ok">✓</span>' : ''}`;
     button.title = lesson.hint;
     button.onclick = () => selectLesson(lesson.id);
     return button;
@@ -404,9 +435,31 @@ function computeZoom() {
   state.zoom = Math.min(2.2, Math.max(1, TICKS / (gaps[Math.floor(gaps.length * .15)] ?? TICKS)));
   state.dirty = true;
 }
+// Nút nhảy nhanh tới từng phần (A · B · A · C · A) khi đoạn gồm nhiều phần.
+function renderSections() {
+  const steps = state.view.steps, marks = [];
+  steps.forEach((step, index) => {
+    const section = score.bars[step.bar].section;
+    if (marks[marks.length - 1]?.section !== section) marks.push({ section, index });
+  });
+  const box = $('sections');
+  box.hidden = marks.length < 2;
+  box.replaceChildren(...marks.map(({ section, index }) => {
+    const button = document.createElement('button');
+    const f = index / Math.max(1, steps.length - 1);
+    button.textContent = section[0];
+    button.dataset.section = section;
+    button.title = `Tới ${SECTION_TITLE[section]}`;
+    button.setAttribute('aria-label', `Tới ${SECTION_TITLE[section]}`);
+    button.style.left = `calc(${f * 100}% - ${f * 28}px + 14px)`;
+    button.onclick = () => { stopPlay(); goTo(index); };
+    return button;
+  }));
+}
 function rebuildSteps(index) {
   state.view = buildSteps(score, state.lesson.from, state.lesson.to, settings.hands);
   computeZoom();
+  renderSections();
   $('seek').max = Math.max(0, state.view.steps.length - 1);
   goTo(index, { sound: false, instant: true });
 }
@@ -417,6 +470,7 @@ function setHands(hands) {
   document.querySelectorAll('#handSeg button').forEach(b => b.setAttribute('aria-checked', String(b.dataset.hands === hands)));
   state.view = buildSteps(score, state.lesson.from, state.lesson.to, hands);
   computeZoom();
+  renderSections();
   $('seek').max = Math.max(0, state.view.steps.length - 1);
   const index = state.view.steps.findIndex(s => s.time >= time);
   goTo(index < 0 ? 0 : index, { sound: false });
@@ -430,7 +484,7 @@ function goTo(index, { sound = true, instant = false } = {}) {
   if (instant) state.pos = state.target;
   hideDone();
   settings.steps[stepKey()] = state.index; save();
-  renderStep();
+  renderStep(instant);
   if (sound && settings.sound) playStep();
 }
 async function playStep() {
@@ -560,6 +614,12 @@ function frame(now) {
     if (Math.abs(state.target - state.pos) < .3) state.pos = state.target;
     state.dirty = true;
   }
+  if (state.vA !== state.tA || state.vB !== state.tB) {
+    const k = 1 - Math.exp(-dt * 9);
+    state.vA += (state.tA - state.vA) * k; state.vB += (state.tB - state.vB) * k;
+    if (Math.abs(state.tA - state.vA) + Math.abs(state.tB - state.vB) < 1e-4) { state.vA = state.tA; state.vB = state.tB; }
+    applyView(); drawMinimap();
+  }
   if (state.dirty) { state.dirty = false; drawRoll(); }
   requestAnimationFrame(frame);
 }
@@ -615,6 +675,7 @@ function renderGuide() {
 // ───────────────────────── Sự kiện ─────────────────────────
 $('nextButton').onclick = next;
 $('prevButton').onclick = prev;
+$('restartButton').onclick = () => { stopPlay(); goTo(0); };
 $('playButton').onclick = togglePlay;
 $('againButton').onclick = () => goTo(0);
 $('nextLessonButton').onclick = () => { const i = LESSONS.indexOf(state.lesson); selectLesson(LESSONS[Math.min(LESSONS.length - 1, i + 1)].id, 0); };
@@ -673,6 +734,7 @@ document.addEventListener('visibilitychange', () => {
   else stopPlay();
 });
 new ResizeObserver(() => { resizeRoll(); fitLabels(); drawMinimap(); }).observe($('stage'));
+new ResizeObserver(() => fitLabels()).observe($('keyboard'));
 
 syncToggles();
 document.querySelectorAll('#handSeg button').forEach(b => b.setAttribute('aria-checked', String(b.dataset.hands === settings.hands)));

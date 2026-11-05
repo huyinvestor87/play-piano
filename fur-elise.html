@@ -13,7 +13,7 @@
   <title>Für Elise · Hướng dẫn đánh piano — Play Piano</title>
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
-  <link rel="stylesheet" href="fur-elise.css?v=1.0.0">
+  <link rel="stylesheet" href="fur-elise.css?v=1.1.0">
 </head>
 <body>
 <div class="app" id="app">
@@ -47,6 +47,7 @@
         <span id="progressText" class="progress-text"></span>
       </div>
       <input type="range" id="seek" min="0" max="1" value="0" step="1" aria-label="Chọn bước trong đoạn">
+      <div class="sections" id="sections" hidden></div>
     </div>
   </section>
 
@@ -70,6 +71,7 @@
   </div>
 
   <footer class="controls">
+    <button id="restartButton" class="ghost nav" aria-label="Về đầu đoạn" title="Về đầu đoạn">⏮</button>
     <button id="prevButton" class="ghost nav" aria-label="Lùi một bước">◀</button>
     <button id="nextButton" class="primary nav big">Tiếp ▶</button>
     <div class="seg" id="handSeg" role="radiogroup" aria-label="Tay tập">
@@ -123,6 +125,7 @@
         <li>Đặt iPad nằm ngang trên giá nhạc. Chạm <b>Tiếp ▶</b> hoặc chạm vào vùng nốt rơi để sang nốt kế. Bàn đạp lật trang Bluetooth hoặc bàn phím (phím mũi tên, phím cách) cũng dùng được.</li>
         <li>Tập <b>từng tay</b> trước, sau đó mới ghép <b>2 tay</b>. Tập từng câu ngắn và bật <b>⟲ Lặp</b> đến khi thuộc tay.</li>
         <li>Khi đã nhớ nốt, bấm <b>▶ Tự chạy</b> ở 40–60% rồi tăng dần. 100% là tốc độ gốc (♩ = 72).</li>
+        <li>Thuộc từng đoạn rồi thì chọn <b>♫ Cả bài</b> (nút đầu tiên) để đánh từ đầu đến cuối. Bàn phím tự trượt theo vùng tay đang đánh; các ô <b>A · B · A · C · A</b> dưới thanh tiến độ giúp nhảy nhanh tới từng phần, nút <b>⏮</b> đưa về đầu.</li>
         <li>Thấy <b>PEDAL</b>: đạp pedal phải (sustain) ở đầu ô nhịp, nhả ở cuối ô. Mới tập có thể bỏ qua pedal.</li>
         <li>Không nghe tiếng? Tắt chế độ im lặng và tăng âm lượng iPad. Muốn chạy toàn màn hình: Safari → Chia sẻ → <b>Thêm vào MH chính</b>.</li>
       </ol>
@@ -148,6 +151,6 @@
   <div class="settings-actions"><button id="resetProgress" class="ghost">Xoá đánh dấu đã tập</button><button class="primary" data-close="settingsDialog">Xong</button></div>
 </dialog>
 
-<script type="module" src="fur-elise.js?v=1.0.0"></script>
+<script type="module" src="fur-elise.js?v=1.1.0"></script>
 </body>
 </html>

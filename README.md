@@ -25,6 +25,7 @@ Trang `fur-elise.html` (nút **♪ Học đánh Für Elise** ở trang chính) h
 - **Mỗi bước bấm** cho biết phím nào sáng, **số ngón tay** nào dùng (tay phải: vòng tròn xanh lá, tay trái: ô vuông xanh dương), vị trí phím so với nhóm phím đen và Đô giữa, nốt kế tiếp, khi nào đạp hoặc nhả pedal.
 - **Nốt rơi** cho thấy nốt sắp đến và độ dài cần giữ.
 - **12 đoạn tập**: 5 câu của phần A (đoạn nổi tiếng), phần A đầy đủ, phần B, phần C, đoạn kết và cả bài. Có thể tập tay phải, tay trái hoặc 2 tay, và bật lặp lại.
+- **♫ Cả bài · từ đầu đến cuối** (nút đầu tiên): đánh liền một mạch A · B · A · C · A. Bàn phím tự trượt theo vùng tay đang đánh (luôn thấy trước 2 ô nhịp) nên phím không bị co nhỏ dù bài trải từ La1 đến Mi7. Các ô A · B · A · C · A dưới thanh tiến độ nhảy nhanh tới từng phần, nút ⏮ về đầu.
 - **Tiếp ▶** hoặc chạm vào vùng nốt rơi để đi từng nốt theo nhịp của bạn. Bàn đạp lật trang Bluetooth hoặc phím mũi tên cũng dùng được. **▶ Tự chạy** phát nhạc mẫu ở 25–120% tốc độ (100% = ♩ 72), có đếm 3 nhịp trước khi chạy.
 - Tối ưu cho iPad ngang và dọc: nút lớn, không bị zoom khi chạm hai lần, giữ màn hình sáng khi tập (Screen Wake Lock), vẫn phát tiếng khi gạt công tắc im lặng (iOS 17+), có thể thêm vào Màn hình chính để chạy toàn màn hình.
 
