@@ -45,6 +45,10 @@ button:disabled { opacity: .4; cursor: not-allowed; }
 .chip.active { background: var(--mint); border-color: var(--mint); color: #102a1d; font-weight: 700; }
 .chip.active .n { color: #2b5a41; }
 .chip .ok { color: var(--R); font-weight: 700; }
+.chip.full { border-color: #8a7444; color: var(--gold); font-weight: 600; }
+.chip.full .n { color: var(--gold); }
+.chip.full.active { background: var(--gold); border-color: var(--gold); color: #2b2210; }
+.chip.full.active .n, .chip.full.active .ok { color: #2b2210; }
 .chip.active .ok { color: #1c6b45; }
 
 /* Now card */
@@ -79,6 +83,9 @@ button:disabled { opacity: .4; cursor: not-allowed; }
 .meta { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--muted); flex-wrap: wrap; }
 .pedal { background: #3a3220; color: var(--gold); border-radius: 6px; padding: 3px 8px; font-size: 11px; font-weight: 700; letter-spacing: .5px; }
 #seek { width: 100%; accent-color: var(--mint); height: 26px; margin: 0; }
+.sections { position: relative; height: 26px; flex: none; }
+.sections button { position: absolute; top: 0; transform: translateX(-50%); min-height: 0; height: 24px; min-width: 28px; padding: 0 6px; font-size: 12px; font-weight: 700; border-radius: 6px; color: var(--muted); background: var(--panel2); }
+.sections button.current { background: var(--mint); border-color: var(--mint); color: #102a1d; }
 
 /* Mini map */
 .minimap-wrap { display: flex; align-items: center; gap: 10px; }
@@ -97,7 +104,8 @@ button:disabled { opacity: .4; cursor: not-allowed; }
 .done-actions { display: flex; gap: 10px; }
 
 /* Keyboard */
-.keyboard { height: var(--kb-h); position: relative; flex: none; touch-action: none; border-top: 3px solid #5a1f24; background: #090d0e; }
+.keyboard { height: var(--kb-h); position: relative; flex: none; touch-action: none; overflow: hidden; border-top: 3px solid #5a1f24; background: #090d0e; }
+.keys { position: absolute; top: 0; bottom: 0; }
 .key { position: absolute; top: 0; border-radius: 0 0 6px 6px; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; }
 .key.white { height: 100%; background: linear-gradient(#f4f3ea, #e3e2d8); border: 1px solid #9d9f93; border-top: 0; box-shadow: inset 0 -6px 0 #c4c6b9; z-index: 1; padding-bottom: 10px; }
 .key.black { height: 61%; background: linear-gradient(100deg, #2a3330, #0b100e); border: 1px solid #040706; border-top: 0; box-shadow: inset 0 -5px 0 #000, 2px 3px 4px #0007; z-index: 2; padding-bottom: 8px; border-radius: 0 0 4px 4px; }
@@ -183,8 +191,9 @@ dialog b { color: var(--ink); }
   .side { grid-column: 1 / -1; min-height: 0; flex-direction: row; align-items: center; flex-wrap: wrap; padding: 6px 12px; }
   .side .next { flex: 1; min-height: 0; }
   #seek { flex-basis: 100%; height: 22px; }
+  .sections { flex-basis: 100%; }
   .controls .break { display: block; flex-basis: 100%; height: 0; order: 4; }
-  #prevButton { order: 1; } #nextButton { order: 2; flex: 1; } #playButton { order: 3; }
+  #restartButton, #prevButton { order: 1; } #nextButton { order: 2; flex: 1; } #playButton { order: 3; }
   .seg { order: 5; } .speed { order: 6; flex: 1; margin-left: 0; justify-content: flex-end; } #loopButton { order: 7; } #soundButton { order: 8; }
   .speed input { flex: 1; max-width: 220px; }
   .guide-grid { grid-template-columns: 1fr; }

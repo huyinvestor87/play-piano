@@ -102,7 +102,7 @@ export const LESSONS = [
   { id: 'phanC1', title: 'Phần C · Hợp âm', hint: 'Tay trái gõ đều La2, tay phải bấm hợp âm', from: sectionStart('C'), to: sectionStart('C') + 17 },
   { id: 'phanC2', title: 'Phần C · Rải lên', hint: 'Rải hợp âm La thứ lên cao rồi đi xuống từng phím', from: sectionStart('C') + 18, to: sectionStart('C') + 22 },
   { id: 'ket', title: 'Đoạn kết', hint: 'Phần A lần cuối', from: sectionStart('A3'), to: ORDER.length - 1 },
-  { id: 'all', title: 'Cả bài', hint: 'Toàn bộ Für Elise ≈ 3 phút ở tốc độ gốc', from: 0, to: ORDER.length - 1 },
+  { id: 'all', title: 'Cả bài · từ đầu đến cuối', hint: 'Toàn bộ Für Elise liền một mạch (A · B · A · C · A), khoảng 2 phút 36 giây ở tốc độ gốc', from: 0, to: ORDER.length - 1, full: true },
 ];
 
 // ───────── Tên nốt ─────────
@@ -124,6 +124,49 @@ const SHARP_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#',
 export const midiName = midi => SHARP_NAMES[midi % 12] + (Math.floor(midi / 12) - 1);
 export const isBlack = midi => [1, 3, 6, 8, 10].includes(((midi % 12) + 12) % 12);
 export const MIDDLE_C = 60;
+
+// ───────── Vùng bàn phím hiển thị ─────────
+export function whiteKeys(lo, hi) {
+  let count = 0;
+  for (let m = lo; m <= hi; m++) if (!isBlack(m)) count++;
+  return count;
+}
+/** Dải phím [lo, hi] chứa min..max (chừa 1 phím mỗi bên), bắt đầu ở Đô/Fa, kết thúc ở Mi/Si
+ *  để luôn thấy trọn nhóm phím đen, rộng ít nhất minWhites phím trắng, nằm trong bounds. */
+export function fitRange(min, max, minWhites = 22, bounds = [21, 108]) {
+  let lo = Math.max(bounds[0], min - 1), hi = Math.min(bounds[1], max + 1);
+  const down = () => { while (lo > bounds[0] && ![0, 5].includes(lo % 12)) lo--; };
+  const up = () => { while (hi < bounds[1] && ![4, 11].includes(hi % 12)) hi++; };
+  down(); up();
+  for (let turn = 0; whiteKeys(lo, hi) < minWhites; turn++) {
+    const canLow = lo > bounds[0], canHigh = hi < bounds[1];
+    if (!canLow && !canHigh) break;
+    if ((turn % 2 === 0 && canLow) || !canHigh) { lo--; down(); } else { hi++; up(); }
+  }
+  return [lo, hi];
+}
+/** Khi đánh đoạn dài, bàn phím trượt theo tay. Mỗi ô nhịp có một dải phím luôn chứa nốt của ô đó
+ *  và `lookahead` ô kế tiếp. Dải mới được tính cho cả `2 × lookahead` ô để ít phải trượt; dải chỉ đổi
+ *  khi có nốt sắp ra ngoài, hoặc khi dải đang rộng hơn mức cần quá `slack` phím trắng. */
+export function keyboardWindows(notes, fromBar, toBar, range, { minWhites = 24, lookahead = 2, slack = 4 } = {}) {
+  const span = (from, to) => {
+    let min = Infinity, max = -Infinity;
+    for (const note of notes) if (note.bar >= from && note.bar <= to) { min = Math.min(min, note.midi); max = Math.max(max, note.midi); }
+    return min === Infinity ? null : [min, max];
+  };
+  const windows = new Map();
+  let current = null;
+  for (let bar = fromBar; bar <= toBar; bar++) {
+    const need = span(bar, bar + lookahead);
+    if (!need) { windows.set(bar, current ?? range); continue; }
+    const longer = span(bar, bar + lookahead * 2);
+    const want = fitRange(longer[0], longer[1], minWhites, range);
+    const fits = current && need[0] > current[0] && need[1] < current[1];
+    if (!fits || whiteKeys(...current) > whiteKeys(...want) + slack) current = want;
+    windows.set(bar, current);
+  }
+  return windows;
+}
 
 // Mô tả vị trí phím trên đàn thật dựa vào nhóm phím đen.
 const PLACE = [

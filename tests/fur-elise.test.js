@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildScore, buildSteps, parseVoice, noteLabel, keyPlace, midiName, LESSONS, ORDER, TICKS } from '../fur-elise-score.js';
+import { buildScore, buildSteps, parseVoice, noteLabel, keyPlace, midiName, LESSONS, ORDER, TICKS, fitRange, whiteKeys, keyboardWindows } from '../fur-elise-score.js';
 
 const score = buildScore();
 
@@ -71,4 +71,30 @@ test('note names and key positions describe the real keyboard', () => {
   assert.equal(keyPlace(76).where, 'cao hơn Đô giữa 1 quãng tám');
   assert.equal(keyPlace(45).where, 'thấp hơn Đô giữa 2 quãng tám');
   assert.match(keyPlace(75).place, /phím đen bên phải trong nhóm 2/);
+});
+
+test('keyboard ranges show whole black-key groups and enough keys', () => {
+  const [lo, hi] = fitRange(45, 76); // La2 … Mi5
+  assert.ok([0, 5].includes(lo % 12) && [4, 11].includes(hi % 12));
+  assert.ok(lo < 45 && hi > 76 && whiteKeys(lo, hi) >= 22);
+  assert.deepEqual(fitRange(60, 62, 24, [53, 83]), [53, 83]); // không vượt ra ngoài giới hạn
+});
+
+test('playing the whole piece, the keyboard follows the hands without hiding upcoming notes', () => {
+  const lesson = LESSONS.find(l => l.full);
+  assert.equal(lesson.from, 0);
+  assert.equal(lesson.to, ORDER.length - 1);
+  const { notes } = buildSteps(score, lesson.from, lesson.to);
+  const range = fitRange(Math.min(...notes.map(n => n.midi)), Math.max(...notes.map(n => n.midi)));
+  const windows = keyboardWindows(notes, lesson.from, lesson.to, range);
+  let changes = 0, previous = null;
+  for (let bar = lesson.from; bar <= lesson.to; bar++) {
+    const [lo, hi] = windows.get(bar);
+    assert.ok([0, 5].includes(lo % 12) && [4, 11].includes(hi % 12), `ô ${bar}`);
+    assert.ok(lo >= range[0] && hi <= range[1] && whiteKeys(lo, hi) >= 24, `ô ${bar}`);
+    for (const note of notes) if (note.bar >= bar && note.bar <= bar + 2) assert.ok(note.midi > lo && note.midi < hi, `ô ${bar} ${note.name}`);
+    if (previous && (previous[0] !== lo || previous[1] !== hi)) changes++;
+    previous = [lo, hi];
+  }
+  assert.ok(changes <= 20, `bàn phím trượt ${changes} lần`);
 });
