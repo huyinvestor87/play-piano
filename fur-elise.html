@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#101819">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Für Elise">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="description" content="Hướng dẫn từng nốt, từng ngón tay để đánh Für Elise (Beethoven) trên piano thật. Tối ưu cho iPad.">
+  <title>Für Elise · Hướng dẫn đánh piano — Play Piano</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="stylesheet" href="fur-elise.css?v=1.0.0">
+</head>
+<body>
+<div class="app" id="app">
+  <header class="top">
+    <a class="back" href="./" aria-label="Về trang Play Piano">‹ <span>Play Piano</span></a>
+    <div class="title"><h1>Für Elise</h1><span>Beethoven · La thứ · nhịp 3/8</span></div>
+    <div class="top-actions">
+      <button id="guideButton" class="ghost">Cách xem hướng dẫn</button>
+      <button id="fullscreenButton" class="ghost icon" aria-label="Toàn màn hình" hidden>⛶</button>
+      <button id="settingsButton" class="ghost icon" aria-label="Cài đặt">⚙︎</button>
+    </div>
+  </header>
+
+  <nav class="lessons" id="lessons" aria-label="Chọn đoạn để tập"></nav>
+
+  <section class="now" aria-label="Nốt cần đánh">
+    <div class="hand-card" id="cardR" data-hand="R">
+      <div class="hand-head"><span class="dot"></span>TAY PHẢI</div>
+      <div class="hand-notes" id="notesR"></div>
+      <div class="where" id="whereR"></div>
+    </div>
+    <div class="hand-card" id="cardL" data-hand="L">
+      <div class="hand-head"><span class="dot"></span>TAY TRÁI</div>
+      <div class="hand-notes" id="notesL"></div>
+      <div class="where" id="whereL"></div>
+    </div>
+    <div class="side">
+      <div class="next"><span class="label">TIẾP THEO</span><span id="nextNotes"></span></div>
+      <div class="meta">
+        <span class="pedal" id="pedal" hidden></span>
+        <span id="progressText" class="progress-text"></span>
+      </div>
+      <input type="range" id="seek" min="0" max="1" value="0" step="1" aria-label="Chọn bước trong đoạn">
+    </div>
+  </section>
+
+  <div class="minimap-wrap">
+    <span class="minimap-label" id="minimapLabel">Vùng phím trên đàn 88 phím</span>
+    <canvas id="minimap" aria-hidden="true"></canvas>
+  </div>
+
+  <div class="board">
+    <div class="stage" id="stage" aria-label="Nốt sắp tới rơi xuống phím. Chạm để sang nốt tiếp theo.">
+      <canvas id="roll"></canvas>
+      <div class="tap-hint" id="tapHint">Chạm vào đây hoặc nút <b>Tiếp</b> để sang nốt kế</div>
+      <div class="countdown" id="countdown" hidden></div>
+      <div class="done" id="done" hidden>
+        <p class="done-title">Xong đoạn này! 🎉</p>
+        <p class="done-sub" id="doneSub">Tập lại vài lần cho thuộc tay rồi chuyển đoạn tiếp theo.</p>
+        <div class="done-actions"><button id="againButton" class="ghost">↺ Tập lại</button><button id="nextLessonButton" class="primary">Đoạn tiếp ▶</button></div>
+      </div>
+    </div>
+    <div class="keyboard" id="keyboard" aria-label="Bàn phím: phím sáng là phím cần bấm, số trong vòng tròn là ngón tay"></div>
+  </div>
+
+  <footer class="controls">
+    <button id="prevButton" class="ghost nav" aria-label="Lùi một bước">◀</button>
+    <button id="nextButton" class="primary nav big">Tiếp ▶</button>
+    <div class="seg" id="handSeg" role="radiogroup" aria-label="Tay tập">
+      <button role="radio" data-hands="RL">2 tay</button>
+      <button role="radio" data-hands="R">Tay phải</button>
+      <button role="radio" data-hands="L">Tay trái</button>
+    </div>
+    <button id="playButton" class="ghost play">▶ Tự chạy</button>
+    <span class="break" aria-hidden="true"></span>
+    <label class="speed">Tốc độ <input type="range" id="speed" min="25" max="120" step="5" value="50"><output id="speedOut">50%</output></label>
+    <button id="loopButton" class="ghost toggle" aria-pressed="false" title="Lặp lại đoạn">⟲ Lặp</button>
+    <button id="soundButton" class="ghost toggle icon" aria-pressed="true" aria-label="Âm thanh mẫu">🔊</button>
+  </footer>
+  <div class="sr-only" id="announce" aria-live="polite"></div>
+</div>
+
+<dialog id="guideDialog" aria-labelledby="guideTitle">
+  <button class="close" data-close="guideDialog" aria-label="Đóng">×</button>
+  <p class="eyebrow">ĐỌC MỘT LẦN · NHỚ CẢ BÀI</p>
+  <h2 id="guideTitle">Nhìn màn hình, đánh trên đàn thật</h2>
+  <div class="guide-grid">
+    <section>
+      <h3><span class="num">1</span> Tìm Đô giữa trên đàn của bạn</h3>
+      <div id="guideKeys" class="diagram"></div>
+      <p>Phím <b>Đô</b> luôn là phím trắng nằm <b>ngay bên trái nhóm 2 phím đen</b>. <b>Đô giữa (Đô4)</b> là phím Đô gần chính giữa đàn, thường ngay dưới tên hãng đàn: là phím Đô <b>thứ 4</b> tính từ trái trên đàn 88 phím, <b>thứ 3</b> trên đàn 61 hoặc 76 phím.</p>
+      <p>Số nhỏ sau tên nốt là quãng tám: <b>Mi5</b> là phím Mi ngay trên Đô giữa một quãng tám, <b>La2</b> thấp hơn Đô giữa hai quãng tám.</p>
+    </section>
+    <section>
+      <h3><span class="num">2</span> Số ngón tay</h3>
+      <div id="guideHands" class="diagram"></div>
+      <p>Hai tay đánh số giống nhau: <b>1 ngón cái · 2 trỏ · 3 giữa · 4 áp út · 5 út</b>. Số trong vòng tròn trên phím là ngón bạn dùng.</p>
+    </section>
+    <section>
+      <h3><span class="num">3</span> Màu sắc</h3>
+      <ul class="legend">
+        <li><span class="sw R"></span><b>Xanh lá, vòng tròn</b>: tay phải</li>
+        <li><span class="sw L"></span><b>Xanh dương, ô vuông</b>: tay trái</li>
+        <li><span class="sw hold"></span><b>Màu nhạt</b>: vẫn giữ phím đã bấm trước</li>
+        <li><span class="sw next"></span><b>Viền đứt</b>: phím sắp bấm tiếp theo</li>
+      </ul>
+      <p>Thanh màu rơi xuống bàn phím cho biết nốt nào sắp đến và giữ trong bao lâu (thanh dài = giữ lâu).</p>
+    </section>
+    <section>
+      <h3><span class="num">4</span> Đặt tay lúc bắt đầu</h3>
+      <div id="guideStart" class="diagram"></div>
+      <p><b>Tay phải</b>: ngón cái (1) trên <b>La4</b>, phím La ngay trên Đô giữa. Các ngón 2-3-4-5 đặt lên Si-Đô-Rê-Mi. Ngón 4 nhích lên phím đen <b>Rê♯</b>. <b>Tay trái</b>: ngón út (5) trên <b>La2</b>, thấp hơn La4 hai quãng tám.</p>
+    </section>
+    <section class="wide">
+      <h3><span class="num">5</span> Cách tập hiệu quả</h3>
+      <ol>
+        <li>Đặt iPad nằm ngang trên giá nhạc. Chạm <b>Tiếp ▶</b> hoặc chạm vào vùng nốt rơi để sang nốt kế. Bàn đạp lật trang Bluetooth hoặc bàn phím (phím mũi tên, phím cách) cũng dùng được.</li>
+        <li>Tập <b>từng tay</b> trước, sau đó mới ghép <b>2 tay</b>. Tập từng câu ngắn và bật <b>⟲ Lặp</b> đến khi thuộc tay.</li>
+        <li>Khi đã nhớ nốt, bấm <b>▶ Tự chạy</b> ở 40–60% rồi tăng dần. 100% là tốc độ gốc (♩ = 72).</li>
+        <li>Thấy <b>PEDAL</b>: đạp pedal phải (sustain) ở đầu ô nhịp, nhả ở cuối ô. Mới tập có thể bỏ qua pedal.</li>
+        <li>Không nghe tiếng? Tắt chế độ im lặng và tăng âm lượng iPad. Muốn chạy toàn màn hình: Safari → Chia sẻ → <b>Thêm vào MH chính</b>.</li>
+      </ol>
+    </section>
+  </div>
+  <button class="primary" data-close="guideDialog">Bắt đầu tập</button>
+</dialog>
+
+<dialog id="settingsDialog" aria-labelledby="settingsTitle">
+  <button class="close" data-close="settingsDialog" aria-label="Đóng">×</button>
+  <p class="eyebrow">TUỲ CHỈNH</p>
+  <h2 id="settingsTitle">Cài đặt</h2>
+  <div class="settings-list">
+    <label>Tên nốt <select id="setNames"><option value="both">Đô Rê Mi + C D E</option><option value="solfege">Đô Rê Mi</option><option value="letter">C D E</option></select></label>
+    <label>Chữ trên phím <select id="setLabels"><option value="all">Mọi phím trắng</option><option value="c">Chỉ phím Đô</option><option value="none">Ẩn (như đàn thật)</option></select></label>
+    <label>Đàn của bạn <select id="setPiano"><option value="88">88 phím (La0 – Đô8)</option><option value="76">76 phím (Mi1 – Sol7)</option><option value="61">61 phím (Đô2 – Đô7)</option></select></label>
+    <label class="check"><input type="checkbox" id="setPreview"> Hiện phím sắp bấm (viền đứt)</label>
+    <label class="check"><input type="checkbox" id="setAccomp"> Khi tập một tay, tự chạy phát luôn tay còn lại</label>
+    <label class="check"><input type="checkbox" id="setCountIn"> Đếm 3 nhịp trước khi tự chạy</label>
+    <label class="check"><input type="checkbox" id="setWake"> Giữ màn hình luôn sáng khi tập</label>
+  </div>
+  <p class="small">Bản nhạc chép từ ấn bản Breitkopf &amp; Härtel 1888 (Mutopia Project, public domain). Số ngón tay là gợi ý cho người mới. Nếu tay bạn quen cách khác thì cứ dùng cách đó.</p>
+  <div class="settings-actions"><button id="resetProgress" class="ghost">Xoá đánh dấu đã tập</button><button class="primary" data-close="settingsDialog">Xong</button></div>
+</dialog>
+
+<script type="module" src="fur-elise.js?v=1.0.0"></script>
+</body>
+</html>

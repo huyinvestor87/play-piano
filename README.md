@@ -17,6 +17,19 @@ Không cần cài thư viện hay backend. Trong repo, mở **Settings → Pages
 
 **App không tự ghép video, không quay tay bằng camera và không kiểm tra bấm đúng/sai.** File gốc là nhạc cuối cùng của video, nên bấm theo hướng dẫn không đảm bảo khớp hoàn hảo nếu nốt nhận diện sai.
 
+## Học đánh Für Elise
+
+Trang `fur-elise.html` (nút **♪ Học đánh Für Elise** ở trang chính) hướng dẫn từng nốt của Für Elise để bạn nhìn iPad và đánh trên đàn thật:
+
+- **Bàn phím trên màn hình giống đàn thật**: đủ nhóm 2 và 3 phím đen, ghi tên nốt (Đô Rê Mi và C D E), số quãng tám trên mọi phím Đô và đánh dấu **Đô giữa**. Một dải 88 phím phía trên cho biết bạn đang ở vùng nào của cây đàn (chọn được loại đàn 61 hoặc 76 phím trong Cài đặt).
+- **Mỗi bước bấm** cho biết phím nào sáng, **số ngón tay** nào dùng (tay phải: vòng tròn xanh lá, tay trái: ô vuông xanh dương), vị trí phím so với nhóm phím đen và Đô giữa, nốt kế tiếp, khi nào đạp hoặc nhả pedal.
+- **Nốt rơi** cho thấy nốt sắp đến và độ dài cần giữ.
+- **12 đoạn tập**: 5 câu của phần A (đoạn nổi tiếng), phần A đầy đủ, phần B, phần C, đoạn kết và cả bài. Có thể tập tay phải, tay trái hoặc 2 tay, và bật lặp lại.
+- **Tiếp ▶** hoặc chạm vào vùng nốt rơi để đi từng nốt theo nhịp của bạn. Bàn đạp lật trang Bluetooth hoặc phím mũi tên cũng dùng được. **▶ Tự chạy** phát nhạc mẫu ở 25–120% tốc độ (100% = ♩ 72), có đếm 3 nhịp trước khi chạy.
+- Tối ưu cho iPad ngang và dọc: nút lớn, không bị zoom khi chạm hai lần, giữ màn hình sáng khi tập (Screen Wake Lock), vẫn phát tiếng khi gạt công tắc im lặng (iOS 17+), có thể thêm vào Màn hình chính để chạy toàn màn hình.
+
+Nốt nhạc chép từ ấn bản Breitkopf & Härtel 1888 (bản khắc của [Mutopia Project](https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=931), public domain) và được kiểm tra khớp với file MIDI của bản đó. Số ngón tay là gợi ý cho người mới. Dữ liệu nằm trong `fur-elise-score.js`, mỗi ô nhịp viết dạng `E5/5 D#5/4 …` (nốt/ngón:độ dài) nên dễ sửa.
+
 ## Nhận diện và âm thanh
 
 - Web Worker nhận diện đơn âm bằng normalized difference (YIN-style), 8 kHz, khung 1.024 mẫu, bước 256 mẫu, quãng MIDI 48–84 (C3–C6).
